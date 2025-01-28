@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Flashcards Generator</h1>
+    <form id="flashcardForm">
+        <label for="subject">Ämne:</label>
+        <input type="text" id="subject" name="subject" required>
+        <label for="details">Detaljer:</label>
+        <textarea id="details" name="details" required></textarea>
+        <button type="submit">Generera Flashcards</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('flashcardForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const subject = document.getElementById('subject').value;
+            const details = document.getElementById('details').value;
+
+            fetch('/generate_flashcards', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ subject, details }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = data;
+            });
+        });
+    </script>
+</body>
+</html>
