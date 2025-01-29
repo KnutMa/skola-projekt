@@ -36,11 +36,16 @@ def generate_flashcards():
     # Använd OpenAI API för att generera flashcards
     response = openai.Completion.create(
         engine="text-davinci-003",
-        prompt=f"Skapa flashcards för ämnet {subject} med följande detaljer: {details}",
-        max_tokens=150
+        prompt=f"Skapa 5 flashcards för ämnet {subject} med följande detaljer: {details}. Returnera som en JSON-lista med 'term' och 'definition'.",
+        max_tokens=500
     )
 
-    return jsonify(response.choices[0].text.strip())
+    # Formatera svaret som JSON
+    try:
+        flashcards_data = eval(response.choices[0].text.strip())  # Konvertera sträng till lista/dict
+        return jsonify(flashcards_data)
+    except:
+        return jsonify({"error": "Kunde inte generera flashcards. Försök igen."}), 500
 
 @app.route('/generate_quiz', methods=['POST'])
 def generate_quiz():
@@ -52,11 +57,16 @@ def generate_quiz():
     # Använd OpenAI API för att generera quiz
     response = openai.Completion.create(
         engine="text-davinci-003",
-        prompt=f"Skapa ett quiz med {num_questions} frågor för ämnet {subject} med följande detaljer: {details}",
-        max_tokens=150
+        prompt=f"Skapa ett quiz med {num_questions} frågor för ämnet {subject} med följande detaljer: {details}. Returnera som en JSON-lista med 'question', 'options' och 'answer'.",
+        max_tokens=500
     )
 
-    return jsonify(response.choices[0].text.strip())
+    # Formatera svaret som JSON
+    try:
+        quiz_data = eval(response.choices[0].text.strip())  # Konvertera sträng till lista/dict
+        return jsonify(quiz_data)
+    except:
+        return jsonify({"error": "Kunde inte generera quiz. Försök igen."}), 500
 
 @app.route('/generate_test', methods=['POST'])
 def generate_test():
@@ -67,11 +77,16 @@ def generate_test():
     # Använd OpenAI API för att generera ett prov
     response = openai.Completion.create(
         engine="text-davinci-003",
-        prompt=f"Skapa ett prov för ämnet {subject} med följande detaljer: {details}",
-        max_tokens=150
+        prompt=f"Skapa ett prov för ämnet {subject} med följande detaljer: {details}. Returnera som en JSON-lista med 'question' och 'answer'.",
+        max_tokens=500
     )
 
-    return jsonify(response.choices[0].text.strip())
+    # Formatera svaret som JSON
+    try:
+        test_data = eval(response.choices[0].text.strip())  # Konvertera sträng till lista/dict
+        return jsonify(test_data)
+    except:
+        return jsonify({"error": "Kunde inte generera prov. Försök igen."}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
