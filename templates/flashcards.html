@@ -15,7 +15,7 @@
         <textarea id="details" name="details" required></textarea>
         <button type="submit">Generera Flashcards</button>
     </form>
-    <div id="result"></div>
+    <div id="flashcardContainer"></div>
 
     <script>
         document.getElementById('flashcardForm').addEventListener('submit', function(event) {
@@ -32,7 +32,22 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerText = data;
+                const container = document.getElementById('flashcardContainer');
+                container.innerHTML = '';
+                data.forEach(item => {
+                    const flashcard = document.createElement('div');
+                    flashcard.className = 'flashcard';
+                    flashcard.innerHTML = `
+                        <div class="flashcard-inner">
+                            <div class="flashcard-front">${item.term}</div>
+                            <div class="flashcard-back">${item.definition}</div>
+                        </div>
+                    `;
+                    flashcard.addEventListener('click', () => {
+                        flashcard.classList.toggle('flipped');
+                    });
+                    container.appendChild(flashcard);
+                });
             });
         });
     </script>
