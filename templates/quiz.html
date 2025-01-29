@@ -17,9 +17,12 @@
         <input type="number" id="num_questions" name="num_questions" required>
         <button type="submit">Generera Quiz</button>
     </form>
-    <div id="result"></div>
+    <div id="quizContainer"></div>
 
     <script>
+        let currentQuestion = 0;
+        let quizData = [];
+
         document.getElementById('quizForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const subject = document.getElementById('subject').value;
@@ -35,9 +38,50 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerText = data;
+                quizData = data;
+                currentQuestion = 0;
+                showQuestion();
             });
         });
+
+        function showQuestion() {
+            const container = document.getElementById('quizContainer');
+            if (currentQuestion < quizData.length) {
+                const question = quizData[currentQuestion];
+                container.innerHTML = `
+                    <div class="quiz-question">
+                        <strong>Fråga ${currentQuestion + 1}:</strong> ${question.question}
+                    </div>
+                    <div class="quiz-options">
+                        ${question.options.map((option, index) => `
+                            <label>
+                                <input type="radio" name="answer" value="${option}"> ${option}
+                            </label>
+                        `).join('')}
+                    </div>
+                    <button onclick="checkAnswer()">Submit</button>
+                    <div class="quiz-feedback" id="feedback"></div>
+                `;
+            } else {
+                container.innerHTML = '<p>Quiz avslutat!</p>';
+            }
+        }
+
+        function checkAnswer() {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            const feedback = document.getElementById('feedback');
+            if (selectedAnswer) {
+                if (selectedAnswer.value === quizData[currentQuestion].answer) {
+                    feedback.textContent = 'Rätt!';
+                } else {
+                    feedback.textContent = 'Fel! Rätt svar: ' + quizData[currentQuestion].answer;
+                }
+                currentQuestion++;
+                setTimeout(showQuestion, 1500);
+            } else {
+                feedback.textContent = 'Vänligen välj ett svar.';
+            }
+        }
     </script>
 </body>
 </html>
