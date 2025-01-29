@@ -15,7 +15,7 @@
         <textarea id="details" name="details" required></textarea>
         <button type="submit">Generera Test</button>
     </form>
-    <div id="result"></div>
+    <div id="testContainer"></div>
 
     <script>
         document.getElementById('testForm').addEventListener('submit', function(event) {
@@ -32,7 +32,13 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('result').innerText = data;
+                const container = document.getElementById('testContainer');
+                container.innerHTML = '';
+                data.forEach((item, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.innerHTML = `<strong>Fråga ${index + 1}:</strong> ${item.question}<br><strong>Svar:</strong> ${item.answer}<br><br>`;
+                    container.appendChild(questionDiv);
+                });
             });
         });
     </script>
