@@ -1,10 +1,10 @@
-# app.py (Backend)
+# 1. app.py (Backend) - Optimerad prestanda
 from flask import Flask, render_template, request, jsonify
 import openai
 import os
-import asyncio
 from dotenv import load_dotenv
 from flask_cors import CORS
+import time
 
 load_dotenv()
 
@@ -12,71 +12,73 @@ app = Flask(__name__)
 CORS(app)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-async def generate_with_openai(prompt):
+def generate_with_openai(prompt):
     try:
-        response = await openai.ChatCompletion.acreate(  # Asynkront anrop
+        start_time = time.time()  # Starta tidtagning
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "Du är en pedagogisk AI som genererar utbildningsmaterial."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500,  # Mindre antal tokens för snabbare svar
-            temperature=0.5  # Mindre variation för effektivare svar
+            max_tokens=500,  # Minska tokens för snabbare svar
+            temperature=0.5  # Lägre temperatur för mer direkta svar
         )
-        return response['choices'][0]['message']['content'].strip()
+        duration = time.time() - start_time
+        print(f"OpenAI Response Time: {duration:.2f} sekunder")
+        return response.choices[0].message['content'].strip()
     except Exception as e:
         print(f"OpenAI Error: {str(e)}")
         return None
 
+@app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/generate', methods=['POST'])
-async def generate():
+def generate():
     try:
         data = request.json
         print("Mottagen data:", data)  # Debugging
 
         content_type = data.get('type')
         subject = data.get('subject')
-        grade = data.get('grade', "okänd")
+        grade = data.get('grade')
         details = data.get('details')
-        num_items = int(data.get('num_items', 5))
+        num_items = int(data.get('num_items'))
 
-        if not all([content_type, subject, details]):
-            return jsonify({"error": "Vänligen fyll i alla fält."}), 400
+        prompt = ""
+        if content_type == "quiz":
+            prompt = f"Skapa {num_items} snabba quizfrågor för {subject} årskurs {grade}. Fokus: {details}. Kortfattade frågor och svar."
+        elif content_type == "flashcards":
+            prompt = f"Skapa {num_items} pedagogiska flashcards för {subject} årskurs {grade}. Fokus: {details}."
+        else:
+            return jsonify({"error": "Ogiltig typ"}), 400
 
-        # **Parallellisera genereringen**
-        prompts = []
-        for _ in range(num_items):
-            if content_type == "quiz":
-                prompts.append(f"Skapa en quizfråga för {subject} årskurs {grade}. Fokus: {details}.")
-            elif content_type == "flashcards":
-                prompts.append(f"Skapa ett flashcard för {subject} årskurs {grade}. Fokus: {details}.")
-
-        # Kör alla OpenAI-anrop parallellt för snabbhet
-        responses = await asyncio.gather(*[generate_with_openai(p) for p in prompts])
+        generated_text = generate_with_openai(prompt)
+        if not generated_text:
+            raise Exception("OpenAI API svarade inte.")
 
         result = []
-        for res in responses:
-            if content_type == "quiz":
-                lines = res.split("\n")
-                if len(lines) >= 2:
-                    question = lines[0].replace("Fråga:", "").strip()
-                    answer = lines[1].replace("Svar:", "").strip()
+        lines = [line.strip() for line in generated_text.split('\n') if line.strip()]
+
+        if content_type == "quiz":
+            for i in range(0, len(lines), 2):
+                if i+1 < len(lines):
+                    question = lines[i].replace("Fråga:", "").strip()
+                    answer = lines[i+1].replace("Svar:", "").strip()
                     result.append({"question": question, "answer": answer})
-            elif content_type == "flashcards":
-                lines = res.split("\n")
-                if len(lines) >= 2:
-                    term = lines[0].replace("Begrepp:", "").strip()
-                    definition = lines[1].replace("Definition:", "").strip()
+        elif content_type == "flashcards":
+            for i in range(0, len(lines), 2):
+                if i+1 < len(lines):
+                    term = lines[i].replace("Begrepp:", "").strip()
+                    definition = lines[i+1].replace("Definition:", "").strip()
                     result.append({"term": term, "definition": definition})
 
-        return jsonify({"data": result})
+        return jsonify({"data": result[:num_items]})
     except Exception as e:
         print(f"Server Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-@app.route('/')
-def home():
-    return render_template('index.html')
 
 @app.route('/quiz')
 def quiz():
