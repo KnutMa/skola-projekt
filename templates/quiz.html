@@ -1,87 +1,22 @@
 <!DOCTYPE html>
-<html lang="sv">
+<html  lang="sv">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Generator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Quiz</title>
+   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Quiz Generator</h1>
-    <form id="quizForm">
-        <label for="subject">Ämne:</label>
-        <input type="text" id="subject" name="subject" required>
-        <label for="details">Detaljer:</label>
-        <textarea id="details" name="details" required></textarea>
-        <label for="num_questions">Antal frågor:</label>
-        <input type="number" id="num_questions" name="num_questions" required>
-        <button type="submit">Generera Quiz</button>
-    </form>
-    <div id="quizContainer"></div>
-
-    <script>
-        let currentQuestion = 0;
-        let quizData = [];
-
-        document.getElementById('quizForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('subject').value;
-            const details = document.getElementById('details').value;
-            const num_questions = document.getElementById('num_questions').value;
-
-            fetch('/generate_quiz', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ subject, details, num_questions }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                quizData = data;
-                currentQuestion = 0;
-                showQuestion();
-            });
-        });
-
-        function showQuestion() {
-            const container = document.getElementById('quizContainer');
-            if (currentQuestion < quizData.length) {
-                const question = quizData[currentQuestion];
-                container.innerHTML = `
-                    <div class="quiz-question">
-                        <strong>Fråga ${currentQuestion + 1}:</strong> ${question.question}
-                    </div>
-                    <div class="quiz-options">
-                        ${question.options.map((option, index) => `
-                            <label>
-                                <input type="radio" name="answer" value="${option}"> ${option}
-                            </label>
-                        `).join('')}
-                    </div>
-                    <button onclick="checkAnswer()">Submit</button>
-                    <div class="quiz-feedback" id="feedback"></div>
-                `;
-            } else {
-                container.innerHTML = '<p>Quiz avslutat!</p>';
-            }
-        }
-
-        function checkAnswer() {
-            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
-            const feedback = document.getElementById('feedback');
-            if (selectedAnswer) {
-                if (selectedAnswer.value === quizData[currentQuestion].answer) {
-                    feedback.textContent = 'Rätt!';
-                } else {
-                    feedback.textContent = 'Fel! Rätt svar: ' + quizData[currentQuestion].answer;
-                }
-                currentQuestion++;
-                setTimeout(showQuestion, 1500);
-            } else {
-                feedback.textContent = 'Vänligen välj ett svar.';
-            }
-        }
-    </script>
+   <div class="container">
+       <h1>Quiz</h1>
+       <div id="quiz-container">
+           <p id="question-text">Laddar fråga...</p>
+           <input type="text" id="answer-input" placeholder="Skriv ditt svar här">
+           <button id="next-button" onclick="nextQuestion()">Nästa fråga</button>
+           <button id="submit-button" onclick="submitQuiz()" style="display: none;">Skicka in quiz</button>
+       </div>
+   </div>
+   <script src="/static/script.js"></script>
 </body>
 </html>
+
