@@ -4,52 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flashcards</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-    <h1>Flashcards Generator</h1>
-    <form id="flashcardForm">
-        <label for="subject">Ämne:</label>
-        <input type="text" id="subject" name="subject" required>
-        <label for="details">Detaljer:</label>
-        <textarea id="details" name="details" required></textarea>
-        <button type="submit">Generera Flashcards</button>
-    </form>
-    <div id="flashcardContainer"></div>
-
-    <script>
-        document.getElementById('flashcardForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const subject = document.getElementById('subject').value;
-            const details = document.getElementById('details').value;
-
-            fetch('/generate_flashcards', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ subject, details }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                const container = document.getElementById('flashcardContainer');
-                container.innerHTML = '';
-                data.forEach(item => {
-                    const flashcard = document.createElement('div');
-                    flashcard.className = 'flashcard';
-                    flashcard.innerHTML = `
-                        <div class="flashcard-inner">
-                            <div class="flashcard-front">${item.term}</div>
-                            <div class="flashcard-back">${item.definition}</div>
-                        </div>
-                    `;
-                    flashcard.addEventListener('click', () => {
-                        flashcard.classList.toggle('flipped');
-                    });
-                    container.appendChild(flashcard);
-                });
-            });
-        });
-    </script>
+    <div class="container">
+        <h1>Flashcards</h1>
+        <div id="flashcard-container">
+            <div class="flashcard" onclick="flipCard(this)">
+                <div class="flashcard-front">
+                    <h2 id="term-text"></h2>
+                </div>
+                <div class="flashcard-back">
+                    <p id="definition-text"></p>
+                </div>
+            </div>
+            <div class="flashcard-nav">
+                <button onclick="prevCard()">← Föregående</button>
+                <span id="card-counter"></span>
+                <button onclick="nextCard()">Nästa →</button>
+            </div>
+        </div>
+        <button onclick="window.location.href='/'" class="home-button">Tillbaka hem</button>
+    </div>
+    <script src="/static/script.js"></script>
 </body>
 </html>
